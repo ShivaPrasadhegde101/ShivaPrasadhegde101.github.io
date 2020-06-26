@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dinosaur Game</title>
+    <style>
+        .container{
+            height: 200px;
+            position: relative;
+
+        }
+        .vertical-center{
+            margin:0;
+            position:absolute;
+            top:50%;
+            -ms-transform: translateY(-50%);
+            transform: translateY(-50%);
+        
+
+        }
+
+    </style>
+</head>
+<body ontouchstart="jump()">
+  <canvas width="700" height="320" style="margin-top: 30px;display : block; margin:auto" id="mycanvas"> 
+  </canvas>
+  <h1 style="align-content: center;text-align: center;">Made By ShivP</h1>
+ 
+  <script type="text/javascript">
+
+    var canvas = document.getElementById("mycanvas")
+    var ctx = canvas.getContext("2d")
+    var width=700
+    var height=320
+    var audio = new Audio("https://freesound.org/data/previews/173/173326_2370190-lq.mp3")
+    //var dragonImage =  new Image()
+    var dragonImages= []
+    var dragonImageUrls = ["https://i.imgur.com/dyPMw7K.png","https://i.imgur.com/WwUcIUd.png","https://i.imgur.com/cO9ZZMC.png","https://i.imgur.com/AJUkc9s.png","https://i.imgur.com/6xIWhPr.png"]
+    var counter=0
+    var speed=30
+
+    for(var i=0;i<dragonImageUrls.length;i++)
+    {
+        var dragonImage = new Image()
+        dragonImage.src = dragonImageUrls[i]
+
+        dragonImages.push(dragonImage)
+    }
+    var dragon = {}
+    dragon.images=dragonImages
+    dragon.width =50
+    dragon.height = 50
+    dragon.x =100
+    dragon.y=280
+    dragon.speedY = 0
+    var gravity= 2.08
+
+    dragon.move = function(){
+        this.speedY+=gravity
+        this.y=this.y+this.speedY
+        if(this.y>280)
+        {
+            this.y=280
+            this.speedY=0
+        }
+    }
+    var clouds = []
+    var cloudImage = new Image()
+    cloudImage.src = "https://i.imgur.com/H84RIEb.png"
+    function getCloud()
+    {
+      
+            var cloud = {};
+			cloud.images = [cloudImage] ;
+			cloud.width = 50;
+			cloud.height = 30;
+			cloud.x=width;
+			cloud.y=30+Math.random()*75;
+			cloud.isActive = true;
+			cloud.speedX = -4 -( Math.random()*4);
+			cloud.speedY = 0;
+
+            cloud.move = function(){
+				this.x = this.x + this.speedX;
+				if(this.x < -100 ){
+					this.isActive = false;
+				}
+			}
+
+
+        return cloud
+
+    }
+
+    //adding land
+    var landImage =new Image()
+    landImage.src = "https://i.imgur.com/gL6wPcx.png"
+    var land={}
+    land.width=1200
+    land.height=12
+    land.images=[landImage]
+    land.x=land.width/2
+    land.y=height-25
+    land.speedX = -10
+    land.speedY =0
+    land.repeatX= 1
+    land.move = function(){
+        this.x=this.x+this.speedX
+        if(this.x < -this.width/2)
+        {
+            this.x+=this.width
+        }
+    }
+
+    var hurdles = []
+    var hurdleImage  = new Image()
+    hurdleImage.src="https://i.imgur.com/9pEv72P.png"
+    //Adding hurdles
+    function getHurdle()
+    {
+
+    var hurdle = {}
+    hurdle.width=30
+    hurdle.height=70
+    hurdle.images = [hurdleImage]
+    hurdle.x=width
+    hurdle.y=height - hurdle.height/2 -15
+    hurdle.isActive=true
+    hurdle.speedX=-8
+    hurdle.speedY=0
+
+    hurdle.move = function(){
+        this.x =this.x+this.speedX
+        if((this.x<=132 && this.x>=68  )  && dragon.y>=hurdle.y)
+        {
+            localStorage.setItem('score',data)
+            clearInterval(win)
+        }
+        if(this.x<-100)
+        {
+            this.isActive=false;
+        }
+    }
+    return hurdle
+    }
+
+
+    function drawObject(object){
+            var index = counter % object.images.length
+            var image = object.images[index]
+            try{
+                ctx.drawImage(image,object.x-(object.width/2),object.y-(object.height/2),object.width,object.height)
+
+            }
+            catch(err)
+            {}
+            if(1===object.repeatX)
+            {
+                ctx.drawImage(image,object.width+object.x-(object.width/2),object.y-(object.height/2),object.width,object.height)
+            }
+        
+        }
+        
+    
+
+   var score =0
+   var distance =0 
+   var val=dragon.y+1
+   var check=0
+   var data
+    function update(){
+        counter++
+        score++
+        if(counter%30==0){
+				// Create new cloud and store it in array named clouds
+				var cloud = getCloud();
+				clouds.push(cloud);
+            } 
+        var predistance = Math.floor(Math.random() * 100)
+        if(counter % (100+predistance) ==0 && (100+predistance-distance)>30)
+        {
+            distance = predistance
+            var hurdle = getHurdle()
+            hurdles.push(hurdle)
+            var val=hurdle.y
+            
+            
+        }
+        data = localStorage.getItem('score')
+        if(score>data)
+        {
+            data=score
+        }
+                    
+        
+        ctx.fillStyle = "#ffffff"
+        ctx.fillRect(0,0,width,height)
+        ctx.font = "25px Arial";
+			ctx.fillStyle = "#000000";
+            ctx.fillText("Highest Score: " + parseInt(data/10) , width-250, 25);
+            ctx.fillText("Score: " + parseInt(score/10) , width-150, 50);
+
+        dragon.move()
+        drawObject(dragon)
+        var cloudsfinal=[]
+        for(var i=0;i<clouds.length;i++)
+        {
+         var cloud = clouds[i]
+        cloud.move()
+        drawObject(cloud)
+        if(cloud.isActive== true)
+        {
+            cloudsfinal.push(cloud)
+        }
+    }
+    var hurdlefinal = []
+
+    for(var i=0;i<hurdles.length;i++)
+        {
+         var hurdle = hurdles[i]
+        hurdle.move()
+        drawObject(hurdle)
+        if(hurdle.isActive== true)
+        {
+            hurdlefinal.push(hurdle)
+        }
+    }
+            hurdles = hurdlefinal
+            clouds=cloudsfinal
+            land.move()
+            drawObject(land)
+
+            
+    }
+
+    
+
+    document.addEventListener("keydown", function(event) {
+			if(event.keyCode == 32 || event.keyCode==38){
+                if(dragon.y==280)
+                dragon.speedY = -20
+                audio.play()
+            }
+            if(event.keyCode==13)
+            {
+                
+                clearInterval(win)
+                location.reload(true)
+            }
+        });
+      
+    
+        
+    
+      var win=  setInterval(update,speed)
+      function jump()
+        {
+            if(dragon.y==280)
+                dragon.speedY = -20
+                audio.play()
+        }
+    
+
+
+</script>
+</body>
+</html>
